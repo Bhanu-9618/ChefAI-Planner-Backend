@@ -7,4 +7,5 @@ obj/
 *.sln.docstates
 .vs/
 .vscode/
+appsettings.json
 appsettings.Development.json
