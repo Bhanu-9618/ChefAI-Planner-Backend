@@ -41,7 +41,8 @@ namespace SmartRecipe.Api.Controllers
             {
                 Username = user.Username,
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user)
+                Token = _tokenService.CreateToken(user),
+                Role = user.Role
             };
         }
 
@@ -59,7 +60,8 @@ namespace SmartRecipe.Api.Controllers
             {
                 Username = user.Username,
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user)
+                Token = _tokenService.CreateToken(user),
+                Role = user.Role
             };
         }
     }
