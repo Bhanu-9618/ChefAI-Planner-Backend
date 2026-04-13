@@ -31,6 +31,8 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpClient<IRecipeAiService, RecipeAiService>();
+
 var app = builder.Build();
 
 app.UseAuthentication();
