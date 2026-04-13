@@ -14,11 +14,13 @@ namespace SmartRecipe.Api.Controllers
     {
         private readonly IRecipeAiService _aiService;
         private readonly AppDbContext _context;
+        private readonly IPdfService _pdfService;
 
-        public RecipeController(IRecipeAiService aiService, AppDbContext context)
+        public RecipeController(IRecipeAiService aiService, AppDbContext context, IPdfService pdfService)
         {
             _aiService = aiService;
             _context = context;
+            _pdfService = pdfService;
         }
 
         [HttpPost("generate")]
@@ -67,6 +69,27 @@ namespace SmartRecipe.Api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Recipe saved successfully!", recipeId = recipe.Id });
+        }
+
+        [HttpGet("download/{id}")]
+        public async Task<IActionResult> DownloadRecipePdf(int id)
+        {
+            var recipe = await _context.Recipes.FindAsync(id);
+
+            if (recipe == null) return NotFound("Recipe not found");
+
+            var username = User.Identity?.Name;
+
+            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+
+            if (user == null || recipe.UserId != user.Id)
+            {
+                return Unauthorized("You don't have permission to download this recipe");
+            }
+
+            var pdfBytes = _pdfService.GenerateRecipePdf(recipe);
+
+            return File(pdfBytes, "application/pdf", $"{recipe.Title.Replace(" ", "_")}.pdf");
         }
     }
 }

@@ -33,6 +33,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddHttpClient<IRecipeAiService, RecipeAiService>();
 
+builder.Services.AddScoped<IPdfService, PdfService>();
+
 var app = builder.Build();
 
 app.UseAuthentication();
