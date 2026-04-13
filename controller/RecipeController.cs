@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SmartRecipe.Api.Data;
 using SmartRecipe.Api.Interfaces;
 using SmartRecipe.Api.Models;
@@ -58,7 +59,7 @@ namespace SmartRecipe.Api.Controllers
             if (recipe == null) return BadRequest("Recipe data is required");
 
             var username = User.Identity?.Name;
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null) return Unauthorized(new { message = $"User not found. Claim Name: {username}" });
 
@@ -71,6 +72,55 @@ namespace SmartRecipe.Api.Controllers
             return Ok(new { message = "Recipe saved successfully!", recipeId = recipe.Id });
         }
 
+        [HttpGet("my-recipes")]
+        public async Task<ActionResult<IEnumerable<Recipe>>> GetMyRecipes()
+        {
+            var username = User.Identity?.Name;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null) return Unauthorized();
+
+            var recipes = await _context.Recipes
+                .Where(r => r.UserId == user.Id)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return Ok(recipes);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Recipe>> GetRecipe(int id)
+        {
+            var recipe = await _context.Recipes.FindAsync(id);
+
+            if (recipe == null) return NotFound("Recipe not found");
+
+            var username = User.Identity?.Name;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null || recipe.UserId != user.Id)
+            {
+                return Unauthorized("You don't have permission to view this recipe");
+            }
+
+            return Ok(recipe);
+        }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Recipe>>> SearchRecipes([FromQuery] string title)
+        {
+            var username = User.Identity?.Name;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null) return Unauthorized();
+
+            var recipes = await _context.Recipes
+                .Where(r => r.UserId == user.Id && r.Title.ToLower().Contains(title.ToLower()))
+                .ToListAsync();
+
+            return Ok(recipes);
+        }
+
         [HttpGet("download/{id}")]
         public async Task<IActionResult> DownloadRecipePdf(int id)
         {
@@ -79,8 +129,7 @@ namespace SmartRecipe.Api.Controllers
             if (recipe == null) return NotFound("Recipe not found");
 
             var username = User.Identity?.Name;
-
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null || recipe.UserId != user.Id)
             {
