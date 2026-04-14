@@ -18,19 +18,3 @@ ChefAI-Planner is a professional RESTful API that acts as a personal AI Nutritio
 * **AI:** Google Gemini 2.5 Flash
 * **Security:** JWT Bearer Authentication
 * **PDF Engine:** QuestPDF
-
-## 🔌 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Create a new account
-- `POST /api/auth/login` - Get access token
-
-### Recipe Management
-- `POST /api/recipe/generate` - Generate AI recipe (Requires Auth)
-- `POST /api/recipe/save` - Save generated recipe to DB
-- `GET /api/recipe/my-recipes` - List all saved recipes
-- `GET /api/recipe/{id}` - Get full details of a recipe
-- `GET /api/recipe/search?title=...` - Search recipes by name
-- `GET /api/recipe/download/{id}` - Export recipe as PDF
----
-Developed as a Full-Stack Trainee Project.
