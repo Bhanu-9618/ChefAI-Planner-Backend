@@ -39,6 +39,7 @@ namespace SmartRecipe.Api.Controllers
 
             return new UserDto
             {
+                Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
                 Token = _tokenService.CreateToken(user),
@@ -58,6 +59,7 @@ namespace SmartRecipe.Api.Controllers
 
             return new UserDto
             {
+                Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
                 Token = _tokenService.CreateToken(user),
