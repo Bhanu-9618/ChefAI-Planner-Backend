@@ -35,11 +35,22 @@ builder.Services.AddHttpClient<IRecipeAiService, RecipeAiService>();
 
 builder.Services.AddScoped<IPdfService, PdfService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+    
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization(); 
-
+app.UseCors("AllowFrontend");
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())
