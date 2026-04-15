@@ -73,19 +73,50 @@ namespace SmartRecipe.Api.Controllers
         }
 
         [HttpGet("my-recipes")]
-        public async Task<ActionResult<IEnumerable<Recipe>>> GetMyRecipes()
+        public async Task<ActionResult<IEnumerable<Recipe>>> GetMyRecipes([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
         {
             var username = User.Identity?.Name;
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null) return Unauthorized();
 
+            // Validate pagination parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 12;
+            if (pageSize > 100) pageSize = 100; // Max limit
+
+            var totalRecipes = await _context.Recipes
+                .Where(r => r.UserId == user.Id)
+                .CountAsync();
+
             var recipes = await _context.Recipes
                 .Where(r => r.UserId == user.Id)
                 .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new Recipe
+                {
+                    Id = r.Id,
+                    Title = r.Title,
+                    Ingredients = r.Ingredients,
+                    Instructions = r.Instructions,
+                    ImageUrl = r.ImageUrl,
+                    CreatedAt = r.CreatedAt,
+                    UserId = r.UserId,
+                    User = null // Exclude user object
+                })
                 .ToListAsync();
 
-            return Ok(recipes);
+            var response = new
+            {
+                page,
+                pageSize,
+                totalRecipes,
+                totalPages = (int)Math.Ceiling(totalRecipes / (double)pageSize),
+                recipes
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
@@ -103,7 +134,20 @@ namespace SmartRecipe.Api.Controllers
                 return Unauthorized("You don't have permission to view this recipe");
             }
 
-            return Ok(recipe);
+            // Return recipe without user object
+            var recipeResponse = new Recipe
+            {
+                Id = recipe.Id,
+                Title = recipe.Title,
+                Ingredients = recipe.Ingredients,
+                Instructions = recipe.Instructions,
+                ImageUrl = recipe.ImageUrl,
+                CreatedAt = recipe.CreatedAt,
+                UserId = recipe.UserId,
+                User = null // Exclude user object
+            };
+
+            return Ok(recipeResponse);
         }
 
         [HttpGet("search")]
@@ -116,6 +160,17 @@ namespace SmartRecipe.Api.Controllers
 
             var recipes = await _context.Recipes
                 .Where(r => r.UserId == user.Id && r.Title.ToLower().Contains(title.ToLower()))
+                .Select(r => new Recipe
+                {
+                    Id = r.Id,
+                    Title = r.Title,
+                    Ingredients = r.Ingredients,
+                    Instructions = r.Instructions,
+                    ImageUrl = r.ImageUrl,
+                    CreatedAt = r.CreatedAt,
+                    UserId = r.UserId,
+                    User = null // Exclude user object
+                })
                 .ToListAsync();
 
             return Ok(recipes);
