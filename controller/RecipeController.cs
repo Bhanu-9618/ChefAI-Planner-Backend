@@ -73,19 +73,50 @@ namespace SmartRecipe.Api.Controllers
         }
 
         [HttpGet("my-recipes")]
-        public async Task<ActionResult<IEnumerable<Recipe>>> GetMyRecipes()
+        public async Task<ActionResult<IEnumerable<Recipe>>> GetMyRecipes([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
         {
             var username = User.Identity?.Name;
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null) return Unauthorized();
 
+            // Validate pagination parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 12;
+            if (pageSize > 100) pageSize = 100; // Max limit
+
+            var totalRecipes = await _context.Recipes
+                .Where(r => r.UserId == user.Id)
+                .CountAsync();
+
             var recipes = await _context.Recipes
                 .Where(r => r.UserId == user.Id)
                 .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new Recipe
+                {
+                    Id = r.Id,
+                    Title = r.Title,
+                    Ingredients = r.Ingredients,
+                    Instructions = r.Instructions,
+                    ImageUrl = r.ImageUrl,
+                    CreatedAt = r.CreatedAt,
+                    UserId = r.UserId,
+                    User = null // Exclude user object
+                })
                 .ToListAsync();
 
-            return Ok(recipes);
+            var response = new
+            {
+                page,
+                pageSize,
+                totalRecipes,
+                totalPages = (int)Math.Ceiling(totalRecipes / (double)pageSize),
+                recipes
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
