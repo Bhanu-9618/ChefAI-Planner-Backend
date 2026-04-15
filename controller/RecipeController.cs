@@ -160,6 +160,17 @@ namespace SmartRecipe.Api.Controllers
 
             var recipes = await _context.Recipes
                 .Where(r => r.UserId == user.Id && r.Title.ToLower().Contains(title.ToLower()))
+                .Select(r => new Recipe
+                {
+                    Id = r.Id,
+                    Title = r.Title,
+                    Ingredients = r.Ingredients,
+                    Instructions = r.Instructions,
+                    ImageUrl = r.ImageUrl,
+                    CreatedAt = r.CreatedAt,
+                    UserId = r.UserId,
+                    User = null // Exclude user object
+                })
                 .ToListAsync();
 
             return Ok(recipes);
