@@ -134,7 +134,20 @@ namespace SmartRecipe.Api.Controllers
                 return Unauthorized("You don't have permission to view this recipe");
             }
 
-            return Ok(recipe);
+            // Return recipe without user object
+            var recipeResponse = new Recipe
+            {
+                Id = recipe.Id,
+                Title = recipe.Title,
+                Ingredients = recipe.Ingredients,
+                Instructions = recipe.Instructions,
+                ImageUrl = recipe.ImageUrl,
+                CreatedAt = recipe.CreatedAt,
+                UserId = recipe.UserId,
+                User = null // Exclude user object
+            };
+
+            return Ok(recipeResponse);
         }
 
         [HttpGet("search")]
