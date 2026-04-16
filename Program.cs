@@ -39,7 +39,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        // Read the FrontendUrl from environment variables if it exists
+        var frontendUrl = builder.Configuration["FrontendUrl"];
+        var origins = new List<string> { "http://localhost:5173", "http://localhost:3000" };
+        
+        if (!string.IsNullOrEmpty(frontendUrl))
+        {
+            origins.Add(frontendUrl);
+        }
+
+        policy.WithOrigins(origins.ToArray())
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
