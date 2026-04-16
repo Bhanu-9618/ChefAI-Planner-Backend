@@ -57,9 +57,9 @@ builder.Services.AddCors(options =>
     
 var app = builder.Build();
 
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization(); 
-app.UseCors("AllowFrontend");
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())
