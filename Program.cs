@@ -23,24 +23,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddControllers();
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddOpenApi();
-
 builder.Services.AddHttpClient<IRecipeAiService, RecipeAiService>();
-
 builder.Services.AddScoped<IPdfService, PdfService>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        // Read the FrontendUrl from environment variables if it exists
-        var frontendUrl = builder.Configuration["FrontendUrl"];
+        var frontendUrl = builder.Configuration["FrontendUrl"]?.TrimEnd('/');
         var origins = new List<string> { "http://localhost:5173", "http://localhost:3000" };
         
         if (!string.IsNullOrEmpty(frontendUrl))
@@ -57,17 +52,17 @@ builder.Services.AddCors(options =>
     
 var app = builder.Build();
 
+app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization(); 
+
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
-app.UseHttpsRedirection();
 
 app.MapGet("/", () => "Smart Recipe API is Running! 🚀");
 
