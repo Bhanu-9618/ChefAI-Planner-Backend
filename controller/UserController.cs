@@ -56,7 +56,7 @@ namespace SmartRecipe.Api.Controllers
             }
 
             if (!string.IsNullOrEmpty(updateDto.Password))
-                user.PasswordHash = updateDto.Password;
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updateDto.Password);
 
             if (updateDto.Weight.HasValue)
                 user.Weight = updateDto.Weight.Value;

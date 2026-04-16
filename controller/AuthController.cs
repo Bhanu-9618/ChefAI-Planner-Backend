@@ -30,7 +30,7 @@ namespace SmartRecipe.Api.Controllers
             {
                 Username = registerDto.Username,
                 Email = registerDto.Email,
-                PasswordHash = registerDto.Password,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
                 Role = "User"
             };
 
@@ -55,7 +55,7 @@ namespace SmartRecipe.Api.Controllers
 
             if (user == null) return Unauthorized("Invalid Email");
 
-            if (user.PasswordHash != loginDto.Password) return Unauthorized("Invalid Password");
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash)) return Unauthorized("Invalid Password");
 
             return new UserDto
             {
